@@ -95,9 +95,24 @@ body {
 /* Main Container */
 .main-container {
     display: grid;
-    grid-template-columns: 320px 1fr;
+    grid-template-columns: 260px 1fr;
+    /* Reduced from 320px (~80%) */
     height: calc(100vh - 100px);
     gap: 0;
+    transition: grid-template-columns 0.3s ease;
+    /* Smooth transition */
+}
+
+/* Collapsed State */
+.main-container.sidebar-collapsed {
+    grid-template-columns: 0px 1fr;
+}
+
+.main-container.sidebar-collapsed .filter-panel {
+    overflow: hidden;
+    /* Hide content when collapsed */
+    padding: 0;
+    border: none;
 }
 
 /* Filter Panel */
@@ -107,6 +122,12 @@ body {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    zoom: 0.85;
+    /* Scale down content */
+    width: 100%;
+    /* Fill the grid column */
+    min-width: 0;
+    /* Allow collapsing */
 }
 
 .filter-panel::-webkit-scrollbar {
@@ -130,16 +151,19 @@ body {
     padding: var(--spacing-lg);
     border-bottom: 1px solid var(--border-color);
     display: flex;
-    justify-content: space-between;
+    gap: 10px;
+    /* Gap for buttons */
     align-items: center;
     position: sticky;
     top: 0;
     background: var(--bg-secondary);
     z-index: 10;
+    white-space: nowrap;
+    /* Prevent wrapping */
 }
 
 .filter-title {
-    font-size: 1.25rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--text-primary);
 }
@@ -183,7 +207,7 @@ body {
 
 .filter-label {
     display: block;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 500;
     color: var(--text-secondary);
     margin-bottom: var(--spacing-sm);
@@ -205,7 +229,7 @@ body {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     color: var(--text-primary);
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     transition: all var(--transition-fast);
 }
 
@@ -261,8 +285,12 @@ body {
 }
 
 .filter-apply {
-    margin: var(--spacing-lg);
-    padding: var(--spacing-md);
+    margin: var(--spacing-md) auto;
+    /* Centered horizontally */
+    padding: 0.5rem 2rem;
+    /* Reduced height (top/bottom), wider width (left/right) */
+    width: 80%;
+    /* Ensure it doesn't take full width so centering is visible */
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
     border: none;
     border-radius: var(--radius-md);
@@ -313,7 +341,7 @@ body {
 
 .panel-title {
     padding: var(--spacing-md) var(--spacing-lg);
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--text-secondary);
     text-transform: uppercase;
@@ -358,7 +386,7 @@ body {
 }
 
 .flight-section-title {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     color: var(--text-secondary);
     text-transform: uppercase;
@@ -405,7 +433,7 @@ body {
 
 .layer-photo-id {
     flex: 1;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 500;
     color: var(--text-primary);
 }
@@ -592,7 +620,7 @@ body {
 }
 
 .flight-list-header h3 {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--text-secondary);
     text-transform: uppercase;
@@ -676,7 +704,7 @@ body {
 }
 
 .flight-item-title {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--text-primary);
     margin-bottom: var(--spacing-xs);
@@ -1232,4 +1260,79 @@ input:checked+.toggle-slider:before {
 
 .collapse-toggle.collapsed svg {
     transform: rotate(-90deg);
+}
+
+/* Fix Mapea Controls Styling (Remove white backgrounds) */
+.m-mouse,
+.m-mouse-position {
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    /* Semi-transparent background */
+    color: var(--text-primary) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.8rem !important;
+    padding: 2px 8px !important;
+    border-radius: 4px;
+
+    /* Force position inside the map view */
+    position: absolute !important;
+    bottom: 45px !important;
+    right: 180px !important;
+    /* Adjust this value to move it left */
+    z-index: 1000 !important;
+
+    /* Ensure no text wrapping causes layout issues */
+    white-space: nowrap;
+    text-shadow: none !important;
+}
+
+.m-scaleline-inner {
+    border: 1px solid var(--text-secondary) !important;
+    border-top: none !important;
+    color: var(--text-secondary) !important;
+}
+
+/* Hide empty white containers if any */
+.m-area {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* Sidebar Expand Button (Floating) */
+.sidebar-expand-btn {
+    position: absolute;
+    top: 110px;
+    /* Aligned near top */
+    left: 20px;
+    z-index: 1000;
+    background: white;
+    /* Light bg for visibility on map */
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.sidebar-expand-btn.hidden {
+    display: none;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sidebar-expand-btn svg {
+    width: 20px;
+    height: 20px;
+    color: #1e293b;
+    /* Dark icon */
+}
+
+.sidebar-expand-btn:hover {
+    background: #f1f5f9;
 }

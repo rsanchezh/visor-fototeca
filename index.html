@@ -16,11 +16,13 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/simplebaselayerselector.css">
+    <link rel="stylesheet" href="css/plugin-overrides.css">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 
 <body>
@@ -44,7 +46,13 @@
         <aside class="filter-panel">
             <div class="filter-header">
                 <h2 class="filter-title">Filtros</h2>
-                <button class="collapse-toggle" id="filtersToggle" title="Colapsar/Expandir">
+                <button class="collapse-toggle" id="sidebarCollapseBtn" title="Ocultar Panel Lateral">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+                <div style="flex:1"></div>
+                <button class="collapse-toggle" id="filtersToggle" title="Colapsar/Expandir Filtros">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
@@ -144,7 +152,14 @@
             <!-- Flight List -->
             <div class="flight-list">
                 <div class="flight-list-header" id="flightListHeader">
-                    <h3>Vuelos Disponibles</h3>
+                    <h3 style="display: flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M22 2L11 13"></path>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                        Vuelos Disponibles
+                    </h3>
                     <button class="collapse-toggle" id="flightListToggle" title="Colapsar/Expandir">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="6 9 12 15 18 9"></polyline>
@@ -156,6 +171,13 @@
                 </div>
             </div>
         </aside>
+
+        <!-- Sidebar Expand Button (Floating) -->
+        <button id="sidebarExpandBtn" class="sidebar-expand-btn hidden" title="Mostrar Panel Lateral">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        </button>
 
         <!-- Map Container -->
         <main class="map-container">

@@ -123,10 +123,32 @@ class ActiveLayersUI {
         // Check if this layer is selected (preserve selection state)
         const isSelected = this.selectedLayers.has(fotogramaId);
 
+        // Get fotograma name to display (prefer 'fotograma' property over ID)
+        const photoProperties = layer.get('photoProperties');
+        let displayName = fotogramaId;
+
+        if (photoProperties) {
+            // Try to find a property named 'fotograma' (case insensitive)
+            const fotogramaProp = Object.keys(photoProperties).find(k => k.toLowerCase() === 'fotograma');
+            if (fotogramaProp && photoProperties[fotogramaProp]) {
+                displayName = photoProperties[fotogramaProp];
+            }
+        }
+
+        // CLEANUP: If the name still looks like "123-456" (Flight-Photo), strip the prefix
+        // This handles cases where we fallback to ID or the property itself includes the flight
+        if (typeof displayName === 'string' && displayName.includes('-')) {
+            const parts = displayName.split('-');
+            if (parts.length > 1) {
+                // Return the last part (the photo number)
+                displayName = parts[parts.length - 1];
+            }
+        }
+
         item.innerHTML = `
             <div class="layer-item-main">
                 <input type="checkbox" class="layer-checkbox" data-fotograma-id="${fotogramaId}" ${isSelected ? 'checked' : ''}>
-                <span class="layer-photo-id">${this.escapeHtml(fotogramaId)}</span>
+                <span class="layer-photo-id">${this.escapeHtml(String(displayName))}</span>
                 <div class="layer-actions">
                     <button class="layer-action-btn visibility-btn ${isVisible ? 'visible' : 'hidden'}" 
                             data-fotograma-id="${fotogramaId}" 
@@ -245,6 +267,165 @@ class ActiveLayersUI {
     }
 
     /**
+     * Generate PDF for a single layer
+     */
+    async generateOneLayerPDF(fotogramaId) {
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const layer = this.mapeaController.wmsPhotoLayers.get(fotogramaId);
+            if (!layer) {
+                alert('Error: La capa no está disponible.');
+                return;
+            }
+
+            const flight = layer.get('flightData');
+            const photoProperties = layer.get('photoProperties');
+            const ckanExtras = layer.get('ckanExtras');
+
+            // 1. Header
+            doc.setFontSize(18);
+            doc.setTextColor(40, 40, 40);
+            doc.text(`Fotograma: ${fotogramaId}`, 20, 20);
+
+            doc.setFontSize(12);
+            doc.setTextColor(100, 100, 100);
+            if (flight) {
+                doc.text(`Vuelo: ${flight.title || flight.name}`, 20, 30);
+            }
+
+            let yPos = 45;
+
+            // 2. Metadata Section
+            doc.setFontSize(14);
+            doc.setTextColor(0, 0, 0);
+            doc.text('Información:', 20, yPos);
+            yPos += 10;
+
+            doc.setFontSize(10);
+            doc.setTextColor(60, 60, 60);
+
+            // Display properties
+            const addLine = (label, value) => {
+                if (value) {
+                    doc.text(`${label}: ${value}`, 20, yPos);
+                    yPos += 7;
+                }
+            };
+
+            // Select specific properties to display
+            const targetProperties = [
+                { key: 'fotograma', label: 'Nombre' },
+                { key: 'año', label: 'Año' },
+                { key: 'fecha', label: 'Fecha' }, // Alternative to year
+                { key: 'hoja', label: 'Hoja' },
+                { key: 'hoja_50000', label: 'Hoja 50000' }
+            ];
+
+            // Helper to normalize keys for case-insensitive matching
+            const normalize = str => str.toLowerCase().replace(/[_-]/g, '');
+
+            // Collect values
+            const valuesToShow = [];
+
+            // 1. Fotograma Name (Always show ID if name not found)
+            let nameVal = fotogramaId;
+            if (ckanExtras) {
+                const extra = ckanExtras.find(e => normalize(e.key) === 'fotograma');
+                if (extra) nameVal = extra.value;
+            } else if (photoProperties) {
+                const prop = Object.keys(photoProperties).find(k => normalize(k) === 'fotograma');
+                if (prop) nameVal = photoProperties[prop];
+            }
+            if (nameVal.includes('-')) nameVal = nameVal.split('-').pop(); // Clean name
+            valuesToShow.push({ label: 'Fotograma', value: nameVal });
+
+            // 2. Year / Date
+            let yearVal = null;
+            if (ckanExtras) {
+                const extra = ckanExtras.find(e => normalize(e.key) === 'año' || normalize(e.key) === 'fecha');
+                if (extra) yearVal = extra.value;
+            } else if (photoProperties) {
+                const prop = Object.keys(photoProperties).find(k => normalize(k) === 'año' || normalize(k) === 'fecha');
+                if (prop) yearVal = photoProperties[prop];
+            }
+            if (yearVal) {
+                valuesToShow.push({ label: 'Año', value: yearVal });
+            }
+
+            // 3. Sheet
+            let sheetVal = null;
+            if (ckanExtras) {
+                const extra = ckanExtras.find(e => normalize(e.key).includes('hoja'));
+                if (extra) sheetVal = extra.value;
+            } else if (photoProperties) {
+                const prop = Object.keys(photoProperties).find(k => normalize(k).includes('hoja'));
+                if (prop) sheetVal = photoProperties[prop];
+            }
+            if (sheetVal) {
+                valuesToShow.push({ label: 'Hoja 50000', value: sheetVal });
+            }
+
+            // Render selected values
+            valuesToShow.forEach(item => {
+                addLine(item.label, item.value);
+            });
+
+            yPos += 10;
+
+            // 3. Image (if available)
+            const source = layer.getSource();
+            // Try to get URL from WMS params or direct URL property
+            let imgUrl = null;
+
+            if (source.getUrls) {
+                imgUrl = source.getUrls()[0];
+            } else if (source.getUrl) {
+                imgUrl = source.getUrl();
+            }
+
+            if (imgUrl) {
+                doc.text('Imagen:', 20, yPos);
+                yPos += 10;
+
+                try {
+                    // Load image to add to PDF
+                    const img = new Image();
+                    img.crossOrigin = "Anonymous";
+
+                    await new Promise((resolve, reject) => {
+                        img.onload = function () {
+                            const maxWidth = 170;
+                            let w = img.width;
+                            let h = img.height;
+                            const finalW = 170;
+                            const finalH = (h * finalW) / w;
+
+                            doc.addImage(img, 'PNG', 20, yPos, finalW, finalH);
+                            resolve();
+                        };
+                        img.onerror = () => {
+                            console.warn('Could not load image for PDF (likely CORS)');
+                            doc.text('(Imagen no disponible para descarga directa por seguridad)', 20, yPos);
+                            resolve();
+                        };
+                        img.src = imgUrl;
+                    });
+                } catch (e) {
+                    console.error('Error adding image to PDF', e);
+                }
+            }
+
+            doc.save(`fotograma_${fotogramaId}.pdf`);
+
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            alert('Error al generar el PDF. Asegúrese de que la imagen es accesible.');
+        }
+    }
+
+    /**
      * Toggle layer visibility
      */
     toggleLayerVisibility(fotogramaId, layer, button) {
@@ -305,7 +486,8 @@ class ActiveLayersUI {
 
             let hasData = false;
             ckanExtras.forEach(extra => {
-                if (extra.value && extra.value !== '') {
+                // Filter out 'spatial' and empty values
+                if (extra.value && extra.value !== '' && extra.key.toLowerCase() !== 'spatial') {
                     const label = extra.key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                     content += `<p><strong>${this.escapeHtml(label)}:</strong> ${this.escapeHtml(String(extra.value))}</p>`;
                     hasData = true;
@@ -314,6 +496,20 @@ class ActiveLayersUI {
 
             if (!hasData) {
                 content += `<p style="color: var(--text-muted); font-style: italic;">No hay datos adicionales disponibles</p>`;
+            }
+
+            // ADD LINK TO CKAN (Dataset page)
+            if (fotogramaId) {
+                // Ensure ID is lowercase and has underscores instead of dashes
+                const normalizeId = (id) => id.toString().replace(/-/g, '_').toLowerCase();
+                const ckanLink = `https://ws089.juntadeandalucia.es/fototeca/catalogo/dataset/${normalizeId(fotogramaId)}`;
+
+                content += `<hr>`;
+                content += `<p style="text-align: center; margin-top: 10px;">
+                    <a href="${ckanLink}" target="_blank" style="color: var(--primary-color); text-decoration: none; font-weight: 500;">
+                        🔗 Ver en Catálogo CKAN
+                    </a>
+                </p>`;
             }
         }
         // CASE 2: Flight View (No CKAN Extras) - Standard Flight Info
@@ -372,7 +568,8 @@ class ActiveLayersUI {
                     content += `<h4>Información Adicional (Extras)</h4>`;
 
                     extraEntries.forEach(([key, value]) => {
-                        if (value && value !== '') {
+                        // Filter out 'spatial' and empty values
+                        if (value && value !== '' && key.toLowerCase() !== 'spatial') {
                             const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                             content += `<p><strong>${this.escapeHtml(label)}:</strong> ${this.escapeHtml(String(value))}</p>`;
                             hasData = true;
@@ -384,6 +581,20 @@ class ActiveLayersUI {
 
             if (!hasData) {
                 content += `<p style="color: var(--text-muted); font-style: italic;">No hay datos adicionales disponibles</p>`;
+            }
+
+            // ADD LINK TO CKAN (Dataset page) FOR FLIGHT
+            if (flight && flight.name) {
+                // Ensure ID is lowercase and has underscores instead of dashes (using flight.name)
+                const normalizeId = (id) => id.toString().replace(/-/g, '_').toLowerCase();
+                const ckanLink = `https://ws089.juntadeandalucia.es/fototeca/catalogo/dataset/${normalizeId(flight.name)}`;
+
+                content += `<hr>`;
+                content += `<p style="text-align: center; margin-top: 10px;">
+                    <a href="${ckanLink}" target="_blank" style="color: var(--primary-color); text-decoration: none; font-weight: 500;">
+                        🔗 Ver en Catálogo CKAN
+                    </a>
+                </p>`;
             }
         }
 

@@ -31,6 +31,41 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn('  Missing:', !filtersToggle ? 'filtersToggle' : 'filtersBody');
     }
 
+    // Initialize Main Sidebar Collapse (Entire Panel)
+    const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
+    const sidebarExpandBtn = document.getElementById('sidebarExpandBtn');
+    const mainContainer = document.querySelector('.main-container');
+
+    if (sidebarCollapseBtn && sidebarExpandBtn && mainContainer) {
+        console.log('✅ Sidebar collapse initialized');
+
+        // Collapse Sidebar
+        sidebarCollapseBtn.addEventListener('click', () => {
+            mainContainer.classList.add('sidebar-collapsed');
+            sidebarExpandBtn.classList.remove('hidden');
+
+            // Force map resize update after transition
+            setTimeout(() => {
+                if (window.app && window.app.mapeaController && window.app.mapeaController.map) {
+                    window.app.mapeaController.map.updateSize();
+                }
+            }, 350);
+        });
+
+        // Expand Sidebar
+        sidebarExpandBtn.addEventListener('click', () => {
+            mainContainer.classList.remove('sidebar-collapsed');
+            sidebarExpandBtn.classList.add('hidden');
+
+            // Force map resize update after transition
+            setTimeout(() => {
+                if (window.app && window.app.mapeaController && window.app.mapeaController.map) {
+                    window.app.mapeaController.map.updateSize();
+                }
+            }, 350);
+        });
+    }
+
     try {
         console.log('🚀 Initializing App...');
         window.app = new App();

@@ -109,10 +109,10 @@ class MAPEAController {
                 maxExtent: [100401, 3987100, 621273, 4288700],
                 projection: 'EPSG:25830*m',
             });
-            this.map.addControls(['ScaleLine', 'Scale', 'Mouse', 'panzoombar', 'layerSwitcher']);
+            this.map.addControls(['ScaleLine', 'panzoombar']);
+            //, 'layerSwitcher''Scale',
 
-
-            const mp = new M.plugin.Simplebaselayerselector();
+            const mp = new M.plugin.Simplebaselayerselector({ position: 'TR' });
 
             this.map.addPlugin(mp);
 
