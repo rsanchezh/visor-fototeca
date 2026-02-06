@@ -19,7 +19,7 @@ class MAPEAController {
         try {
 
 
-            const ortofoto2016_color = new M.layer.WMS({
+            const ortofoto2022_color = new M.layer.WMS({
                 url: 'https://www.ideandalucia.es/wms/ortofoto_2022?',
                 name: 'ortofotografia_2022_rgb',
                 legend: 'Ortofotografía Color 0,25 metros/pixel (Año 2022)',
@@ -29,9 +29,9 @@ class MAPEAController {
                 styles: 'default'
             })
 
-            ortofoto2016_color.setLegendURL('https://www.ideandalucia.es/visor/leyendas/ortofoto2016_color.png')
+            ortofoto2022_color.setLegendURL('https://www.ideandalucia.es/visor/leyendas/ortofoto2022_color.png')
 
-            const ortofoto2016_pancromatica = new M.layer.WMS({
+            const ortofoto2022_pancromatico = new M.layer.WMS({
                 url: 'https://www.ideandalucia.es/wms/ortofoto_2022?',
                 name: 'ortofotografia_2022_pancromatico',
                 legend: 'Ortofotografía Pancromática 0,25 metros/pixel (Año 2022)',
@@ -41,9 +41,9 @@ class MAPEAController {
                 styles: 'default'
             })
 
-            ortofoto2016_pancromatica.setLegendURL('https://www.ideandalucia.es/visor/leyendas/ortofoto2016_pancromatico.png');
+            ortofoto2022_pancromatico.setLegendURL('https://www.ideandalucia.es/visor/leyendas/ortofoto2022_pancromatico.png');
 
-            const ortofoto2016_infrarrojo = new M.layer.WMS({
+            const ortofoto2022_infrarrojo = new M.layer.WMS({
                 url: 'https://www.ideandalucia.es/wms/ortofoto_2022?',
                 name: 'ortofotografia_2022_infrarrojo',
                 legend: 'Ortofotografía Infrarrojo 0,25 metros/pixel (Año 2022)',
@@ -53,7 +53,7 @@ class MAPEAController {
                 styles: 'default'
             })
 
-            ortofoto2016_infrarrojo.setLegendURL('https://www.ideandalucia.es/visor/leyendas/ortofoto2016_infrarrojo.png');
+            ortofoto2022_infrarrojo.setLegendURL('https://www.ideandalucia.es/visor/leyendas/ortofoto2022_infrarrojo.png');
 
 
             const mdt_siose2013 = new M.layer.WMS({
@@ -100,25 +100,104 @@ class MAPEAController {
 
             this.map = M.map({
                 container: CONFIG.MAPEA.CONTAINER,
-                layers: [CDAU_Base, ortofoto2016_color,
-                    ortofoto2016_pancromatica,
-                    ortofoto2016_infrarrojo,
+                layers: [CDAU_Base, ortofoto2022_color,
+                    ortofoto2022_pancromatico,
+                    ortofoto2022_infrarrojo,
                     mdt_siose2013,
                     mdt_2016,
                     MapaAndalucia],
                 maxExtent: [100401, 3987100, 621273, 4288700],
                 projection: 'EPSG:25830*m',
             });
-            this.map.addControls(['ScaleLine', 'panzoombar']);
+            this.map.addControls(['ScaleLine']);
+            this.map.addControls(new M.control.Mouse({
+                srs: 'EPSG:25830', // Sistema de referencia en el que mostrar las coordenadas.
+                label: 'EPSG:25830', // Etiqueta
+                precision: 2 // Número de decimales a mostrar en las coordenadas
+            }));
+            // Zoom control hidden via CSS (.ol-zoom { display: none !important; })
             //, 'layerSwitcher''Scale',
 
-            const mp = new M.plugin.Simplebaselayerselector({ position: 'TR' });
+            // Disable simple selector to avoid conflict/redundancy if BackImgLayer is used
+            /* const mp = new M.plugin.Simplebaselayerselector({ position: 'TR' });
+            this.map.addPlugin(mp); */
 
-            this.map.addPlugin(mp);
+            // BackImgLayer Integration (User Request)
+            // BackImgLayer Integration (User Request)
+            // BackImgLayer Integration (User Request)
+            // Using 'layerOpts' to pass existing WMS layer instances directly
+            // This bypasses the plugin's string parser which forces WMTS
+            const backImg = new M.plugin.BackImgLayer({
+                position: 'TR',
+                collapsed: true,
+                collapsible: true,
+                layerVisibility: true,
+                layerId: 0,
+                columnsNumber: 4,
+                layerOpts: [
+                    {
+                        id: 'CDAU_base',
+                        title: 'Callejero',
+                        preview: 'https://www.ideandalucia.es/visor/leyendas/cdau_base.png',
+                        layers: [CDAU_Base]
+                    },
+                    {
+                        id: 'ortofotografia_2022_rgb',
+                        title: 'Ortofoto RGB',
+                        preview: 'https://www.ideandalucia.es/visor/leyendas/ortofoto2016_color.png',
+                        layers: [ortofoto2022_color]
+                    },
+                    {
+                        id: 'ortofotografia_2022_pancromatico',
+                        title: 'Ortofoto Pan',
+                        preview: 'https://www.ideandalucia.es/visor/leyendas/ortofoto2016_pancromatico.png',
+                        layers: [ortofoto2022_pancromatico]
+                    },
+                    {
+                        id: 'ortofotografia_2022_infrarrojo',
+                        title: 'Ortofoto IR',
+                        preview: 'https://www.ideandalucia.es/visor/leyendas/ortofoto2016_infrarrojo.png',
+                        layers: [ortofoto2022_infrarrojo]
+                    },
+                    {
+                        id: 'sombreado_siose_2013',
+                        title: 'SIOSE',
+                        preview: 'https://www.ideandalucia.es/visor/leyendas/siose_2013.png',
+                        layers: [mdt_siose2013]
+                    },
+                    {
+                        id: 'sombreado_orografico_2016',
+                        title: 'MDT',
+                        preview: 'https://www.ideandalucia.es/visor/leyendas/mdt_2016_tintas_hipsometricas.png',
+                        layers: [mdt_2016]
+                    },
+                    {
+                        id: '00_Mapa_Andalucia',
+                        title: 'Mapa Andalucía',
+                        preview: 'https://www.ideandalucia.es/visor/leyendas/cdau_base.png',
+                        layers: [MapaAndalucia]
+                    }
+                ]
+            });
+            this.map.addPlugin(backImg);
+            console.log('✅ BackImgLayer plugin configured and added');
 
-            mp.on(M.evt.ADDED_TO_MAP, () => {
+            const cat = new M.plugin.CatastroSearch();
+            this.map.addPlugin(cat);
+            const search = new M.plugin.SearchPanel();
+            this.map.addPlugin(search);
+
+            const measure = new M.plugin.Measurebar();
+            this.map.addPlugin(measure);
+
+            cat.on(M.evt.ADDED_TO_MAP, () => {
+                console.log('✅ CatastroSearch ADDED_TO_MAP event fired');
+
+            });
+            /* mp.on(M.evt.ADDED_TO_MAP, () => {
                 console.log('se cargo el plugin')
-            })
+            }) */
+
 
             this.setupBulkDownloadControls(); // Initialize bulk download UI
 
