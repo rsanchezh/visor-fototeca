@@ -1,6 +1,7 @@
 # Visor de Fotografía Aérea - Fototeca de Andalucía
 
 Este proyecto es un visor web interactivo para explorar la Fototeca de Andalucía. Permite visualizar vuelos históricos, filtrar por diversos criterios y descargar fotogramas.
+Se ha relizado enteramente con IA, concretamente Gemini 3.0 Pro y Claude Sonnet 4.5.
 
 ## Características
 
@@ -30,3 +31,4 @@ Este proyecto es una aplicación estática y puede desplegarse en cualquier serv
 2. Ve a la pestaña **Settings** > **Pages**.
 3. En **Source**, selecciona la rama `main` (o `master`) y la carpeta raíz (`/`).
 4. Guarda los cambios. GitHub generará una URL donde tu visor estará accesible públicamente.
+
