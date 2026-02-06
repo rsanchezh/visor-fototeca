@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor de Fotografía Aérea - Fototeca de Andalucía</title>
+
+    <!-- MAPEA4 CSS -->
+    <link rel="stylesheet" href="https://mapea4-sigc.juntadeandalucia.es/assets/css/mapea-6.2.0.ol.min.css">
+
+    <script type="text/javascript"
+        src="https://emiliopardo.github.io/simplebaselayerselector/simplebaselayerselector.ol.min.js"></script>
+    <link href="https://emiliopardo.github.io/simplebaselayerselector/simplebaselayerselector.ol.min.css"
+        rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/simplebaselayerselector.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <h1 class="header-title">
+                <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+                Visor de Fotografía Aérea
+            </h1>
+            <p class="header-subtitle">Fototeca de Andalucía - IECA</p>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Filter Panel -->
+        <aside class="filter-panel">
+            <div class="filter-header">
+                <h2 class="filter-title">Filtros</h2>
+                <button class="collapse-toggle" id="filtersToggle" title="Colapsar/Expandir">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <button class="filter-reset" id="resetFilters" title="Restablecer filtros">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                        <path d="M21 3v5h-5"></path>
+                        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+                        <path d="M3 21v-5h5"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div id="filtersBody" class="filters-body">
+                <div class="filter-group compact">
+                    <label for="filterTextSearch" class="filter-label-inline">Búsqueda:</label>
+                    <input type="text" id="filterTextSearch" class="filter-input-compact" placeholder="Buscar...">
+                </div>
+
+                <div class="filter-group compact">
+                    <label for="filterTipoVuelo" class="filter-label-inline">Tipo:</label>
+                    <select id="filterTipoVuelo" class="filter-select-compact">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+
+                <div class="filter-group compact">
+                    <label for="filterTipologia" class="filter-label-inline">Tipología:</label>
+                    <select id="filterTipologia" class="filter-select-compact">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+
+                <div class="filter-group compact">
+                    <label for="filterColor" class="filter-label-inline">Color:</label>
+                    <select id="filterColor" class="filter-select-compact">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+
+                <div class="filter-group compact">
+                    <label class="filter-label-inline">Año:</label>
+                    <div class="year-range-compact">
+                        <input type="number" id="filterYearFrom" class="filter-input-compact year-input"
+                            placeholder="Desde" min="1900" max="2100">
+                        <span class="year-separator">-</span>
+                        <input type="number" id="filterYearTo" class="filter-input-compact year-input"
+                            placeholder="Hasta" min="1900" max="2100">
+                    </div>
+                </div>
+
+                <button class="filter-apply" id="applyFilters">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                    Aplicar Filtros
+                </button>
+
+                <div class="filter-results" id="filterResults">
+                    <span class="results-count" id="resultsCount">0 vuelos encontrados</span>
+                </div>
+            </div>
+
+            <!-- Active Layers Panel -->
+            <div class="active-layers-panel">
+                <h3 class="panel-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                        <path d="M2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                    </svg>
+                    Capas Activas
+                </h3>
+
+                <div class="layer-mode-toggle">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="removeLayerMode">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label" title="Si activo, elimina la capa. Si inactivo, solo la oculta.">Modo
+                        Eliminar</span>
+                </div>
+
+                <div id="activeLayersList" class="active-layers-list">
+                    <p class="no-layers-message">No hay capas activas</p>
+                </div>
+                <button id="btnDownloadSelected" class="download-selected-btn" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Descargar <span id="downloadSelectedCount">0</span> seleccionados
+                </button>
+            </div>
+
+            <!-- Flight List -->
+            <div class="flight-list">
+                <div class="flight-list-header" id="flightListHeader">
+                    <h3>Vuelos Disponibles</h3>
+                    <button class="collapse-toggle" id="flightListToggle" title="Colapsar/Expandir">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                </div>
+                <div class="flight-list-items" id="flightListItems">
+                    <!-- Flight items will be populated here -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- Map Container -->
+        <main class="map-container">
+            <div id="mapjs" class="mapea-map"></div>
+
+            <!-- Loading Overlay -->
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">Cargando datos...</p>
+            </div>
+
+            <!-- Map Info Panel Removed by user request -->
+        </main>
+    </div>
+
+    <!-- Photo Viewer Modal -->
+    <div class="modal" id="photoModal">
+        <div class="modal-overlay" id="modalOverlay"></div>
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+
+            <div class="modal-body">
+                <div class="photo-container">
+                    <img id="photoImage" class="photo-image" alt="Fotografía aérea">
+                    <div class="photo-loading">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+
+                <div class="photo-metadata">
+                    <h3 class="photo-title" id="photoTitle">Fotograma</h3>
+                    <div class="metadata-grid">
+                        <div class="metadata-item">
+                            <span class="metadata-label">ID Fotograma:</span>
+                            <span class="metadata-value" id="photoIdFotograma">-</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">ID Vuelo:</span>
+                            <span class="metadata-value" id="photoIdVuelo">-</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Fecha:</span>
+                            <span class="metadata-value" id="photoFecha">-</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Hoja:</span>
+                            <span class="metadata-value" id="photoHoja">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAPEA4 JavaScript -->
+    <script src="https://mapea4-sigc.juntadeandalucia.es/js/mapea-6.2.0.ol.min.js"></script>
+    <script src="https://mapea4-sigc.juntadeandalucia.es/js/configuration-6.2.0.js"></script>
+
+    <!-- PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- JSZip for Bulk Download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <!-- Application JavaScript -->
+    <script src="js/config.js"></script>
+    <script src="js/ckan-service.js"></script>
+    <script src="js/mapea-controller.js"></script>
+    <script src="js/filter-ui.js"></script>
+    <script src="js/photo-viewer.js"></script>
+    <script src="js/active-layers-ui.js"></script>
+    <script src="js/flight-list-toggle.js"></script>
+    <script src="js/simplebaselayerselector.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
