@@ -251,7 +251,7 @@ class CKANService {
     async fetchPackageById(fotogramaId) {
         try {
             // Transform ID: "182-12345" -> "182_12345" and ensure lowercase
-            const ckanId = fotogramaId.replace(/-/g, '_').toLowerCase();
+            const ckanId = fotogramaId.replace(/-/, '_').toLowerCase();
 
             const url = `${CONFIG.CKAN.API_URL}/package_show?id=${ckanId}`;
             console.log('📦 Fetching CKAN package:', ckanId, 'URL:', url);

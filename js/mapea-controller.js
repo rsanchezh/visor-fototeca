@@ -108,13 +108,9 @@ class MAPEAController {
                     MapaAndalucia],
                 maxExtent: [100401, 3987100, 621273, 4288700],
                 projection: 'EPSG:25830*m',
+                controls: ['scale', 'mouse']
             });
-            this.map.addControls(['ScaleLine']);
-            this.map.addControls(new M.control.Mouse({
-                srs: 'EPSG:25830', // Sistema de referencia en el que mostrar las coordenadas.
-                label: 'EPSG:25830', // Etiqueta
-                precision: 2 // Número de decimales a mostrar en las coordenadas
-            }));
+
             // Zoom control hidden via CSS (.ol-zoom { display: none !important; })
             //, 'layerSwitcher''Scale',
 
@@ -777,7 +773,7 @@ class MAPEAController {
 
         try {
             // Normalize IDs for comparison
-            const normalizedId = fotogramaId.toString().replace(/-/g, '_');
+            const normalizedId = fotogramaId.toString().replace(/-/, '_');
             const normalizedIdDash = fotogramaId.toString().replace(/_/g, '-');
 
             // Find the footprint feature with matching fotograma ID
@@ -1037,7 +1033,7 @@ class MAPEAController {
             console.log('📍 PNG URL:', pngResource.url);
 
             // Load PNG as WMS layer using the URL directly - NO MODIFICATIONS
-            const normalizedId = fotogramaId.toString().replace(/-/g, '_');
+            const normalizedId = fotogramaId.toString().replace(/-/, '_');
 
             const wmsSource = new ol.source.TileWMS({
                 url: pngResource.url,

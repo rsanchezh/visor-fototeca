@@ -501,7 +501,7 @@ class ActiveLayersUI {
             // ADD LINK TO CKAN (Dataset page)
             if (fotogramaId) {
                 // Ensure ID is lowercase and has underscores instead of dashes
-                const normalizeId = (id) => id.toString().replace(/-/g, '_').toLowerCase();
+                const normalizeId = (id) => id.toString().replace(/-/, '_').toLowerCase();
                 const ckanLink = `https://ws089.juntadeandalucia.es/fototeca/catalogo/dataset/${normalizeId(fotogramaId)}`;
 
                 content += `<hr>`;
@@ -586,7 +586,7 @@ class ActiveLayersUI {
             // ADD LINK TO CKAN (Dataset page) FOR FLIGHT
             if (flight && flight.name) {
                 // Ensure ID is lowercase and has underscores instead of dashes (using flight.name)
-                const normalizeId = (id) => id.toString().replace(/-/g, '_').toLowerCase();
+                const normalizeId = (id) => id.toString().replace(/-/, '_').toLowerCase();
                 const ckanLink = `https://ws089.juntadeandalucia.es/fototeca/catalogo/dataset/${normalizeId(flight.name)}`;
 
                 content += `<hr>`;
@@ -868,7 +868,7 @@ class ActiveLayersUI {
                 })
                 .then(blob => {
                     // Use original filename from URL or fotogramaId
-                    const filename = url.split('/').pop() || `${fotogramaId.replace(/-/g, '_')}.jp2`;
+                    const filename = url.split('/').pop() || `${fotogramaId.replace(/-/, '_')}.jp2`;
                     folder.file(filename, blob);
                     debugLog.push(`✅ Downloaded: ${filename} (${blob.size} bytes)`);
                 })

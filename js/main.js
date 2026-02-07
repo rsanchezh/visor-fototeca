@@ -47,9 +47,15 @@ document.addEventListener('DOMContentLoaded', () => {
             // Force map resize update after transition
             setTimeout(() => {
                 if (window.app && window.app.mapeaController && window.app.mapeaController.map) {
-                    window.app.mapeaController.map.updateSize();
+                    // Trigger Mapea to recalculate map size
+                    const map = window.app.mapeaController.map;
+                    map.refresh(); // Mapea method to refresh map
+                    // Also try OpenLayers updateSize as fallback
+                    if (map.getMapImpl && map.getMapImpl()) {
+                        map.getMapImpl().updateSize();
+                    }
                 }
-            }, 350);
+            }, 400);
         });
 
         // Expand Sidebar
@@ -60,9 +66,15 @@ document.addEventListener('DOMContentLoaded', () => {
             // Force map resize update after transition
             setTimeout(() => {
                 if (window.app && window.app.mapeaController && window.app.mapeaController.map) {
-                    window.app.mapeaController.map.updateSize();
+                    // Trigger Mapea to recalculate map size
+                    const map = window.app.mapeaController.map;
+                    map.refresh(); // Mapea method to refresh map
+                    // Also try OpenLayers updateSize as fallback
+                    if (map.getMapImpl && map.getMapImpl()) {
+                        map.getMapImpl().updateSize();
+                    }
                 }
-            }, 350);
+            }, 400);
         });
     }
 
