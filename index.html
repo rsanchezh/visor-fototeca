@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visor de Fotografía Aérea - Fototeca de Andalucía</title>
-
+    <link rel="icon" href="icon.png" type="image/png">
     <!-- MAPEA4 CSS -->
     <link rel="stylesheet" href="https://mapea4-sigc.juntadeandalucia.es/assets/css/mapea-6.2.0.ol.min.css">
 
@@ -146,6 +146,20 @@
 
                 <div id="activeLayersList" class="active-layers-list">
                     <p class="no-layers-message">No hay capas activas</p>
+                </div>
+                <div class="download-options" style="margin-bottom: 10px; padding: 0 10px;">
+                    <label
+                        style="font-size: 0.9em; font-weight: 500; color: var(--text-primary); margin-right: 10px;">Formato:</label>
+                    <div class="format-toggle"
+                        style="display: inline-flex; background: var(--bg-secondary); padding: 2px; border-radius: 4px;">
+                        <label style="cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">
+                            <input type="radio" name="downloadFormat" value="jp2" checked style="margin-right: 4px;">
+                            JP2
+                        </label>
+                        <label style="cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">
+                            <input type="radio" name="downloadFormat" value="png" style="margin-right: 4px;"> PNG
+                        </label>
+                    </div>
                 </div>
                 <button id="btnDownloadSelected" class="download-selected-btn" disabled>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

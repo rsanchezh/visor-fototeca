@@ -823,6 +823,9 @@ class ActiveLayersUI {
         btnDownload.disabled = true;
         btnDownload.innerHTML = `<span>Consultando CKAN...</span>`;
 
+        const format = document.querySelector('input[name="downloadFormat"]:checked')?.value || 'jp2';
+        console.log(`Starting bulk download with format: ${format}`);
+
         const promises = [];
 
         for (const fotogramaId of this.selectedLayers) {
@@ -844,21 +847,98 @@ class ActiveLayersUI {
             debugLog.push(`CKAN ID: ${packageData.id}`);
             debugLog.push(`Package name: ${packageData.name}`);
 
-            if (!packageData.downloadUrl) {
-                const msg = `❌ SKIPPED ${fotogramaId}: No download URL in CKAN package`;
+            let url = null;
+            let finalUrl = null;
+
+            if (format === 'jp2') {
+                // Try to find JP2 resource
+                const jp2Resource = packageData.resources.find(r => 
+                    (r.mimetype && (r.mimetype === 'JPEG20000' || r.mimetype.includes('jpeg') || r.mimetype.includes('jp2'))) ||
+                    (r.format && (r.format === 'JPEG20000' || r.format.toLowerCase().includes('jpeg') || r.format.toLowerCase().includes('jp2')))
+                );
+                
+                if (jp2Resource) {
+                    url = jp2Resource.url;
+                    debugLog.push(`Found JP2 resource: ${jp2Resource.name}`);
+                } else if (packageData.downloadUrl) {
+                     // Fallback to whatever fetchPackageById found (usually JP2)
+                    url = packageData.downloadUrl;
+                    debugLog.push(`Using default download URL (likely JP2)`);
+                } else {
+                    debugLog.push(`❌ No JP2 resource found`);
+                }
+            } else if (format === 'png') {
+                // Try to find PNG resource
+                const pngResource = packageData.resources.find(r => 
+                    (r.mimetype && r.mimetype.includes('png')) ||
+                    (r.format && r.format.toLowerCase().includes('png'))
+                );
+
+                if (pngResource) {
+                    url = pngResource.url;
+                    debugLog.push(`Found PNG resource: ${pngResource.name}`);
+                } else {
+                    // Fallback to WMS GetMap
+                    debugLog.push(`⚠️ No PNG resource found. Attempting WMS generation...`);
+                    
+                    const layer = this.mapeaController.wmsPhotoLayers.get(fotogramaId);
+                    if (layer) {
+                        try {
+                            const extent = layer.getExtent();
+                            const source = layer.getSource();
+                            const params = source.getParams();
+                            
+                            // Get base URL for WMS
+                            // Try to find a WMS resource in packageData first
+                            const wmsResource = packageData.resources.find(r => r.mimetype === 'WMS' || r.format === 'WMS');
+                            const wmsBaseUrl = wmsResource ? wmsResource.url.split('?')[0] : (packageData.wfsUrl || source.getUrls()[0]);
+
+                            const wmsUrl = new URL(wmsBaseUrl);
+                            
+                            wmsUrl.searchParams.set('SERVICE', 'WMS');
+                            wmsUrl.searchParams.set('REQUEST', 'GetMap');
+                            wmsUrl.searchParams.set('VERSION', params.VERSION || '1.1.1');
+                            wmsUrl.searchParams.set('LAYERS', params.LAYERS);
+                            wmsUrl.searchParams.set('STYLES', params.STYLES || '');
+                            wmsUrl.searchParams.set('FORMAT', 'image/png');
+                            wmsUrl.searchParams.set('TRANSPARENT', 'true');
+                            wmsUrl.searchParams.set('SRS', 'EPSG:25830'); // Using projection from current map/layer context
+                            wmsUrl.searchParams.set('BBOX', extent.join(','));
+                            
+                            if (params.CQL_FILTER) {
+                                wmsUrl.searchParams.set('CQL_FILTER', params.CQL_FILTER);
+                            }
+
+                            // Calculate dimensions for good quality
+                            const widthGeo = extent[2] - extent[0];
+                            const heightGeo = extent[3] - extent[1];
+                            const ratio = widthGeo / heightGeo;
+                            const targetWidth = 2000;
+                            const targetHeight = Math.round(targetWidth / ratio);
+
+                            wmsUrl.searchParams.set('WIDTH', targetWidth);
+                            wmsUrl.searchParams.set('HEIGHT', targetHeight);
+                            
+                            url = wmsUrl.toString();
+                            debugLog.push(`Generated WMS URL for PNG`);
+                        } catch (e) {
+                            debugLog.push(`❌ Error generating WMS URL: ${e.message}`);
+                        }
+                    } else {
+                        debugLog.push(`❌ Layer not active in map controller, cannot generate WMS URL`);
+                    }
+                }
+            }
+
+            if (!url) {
+                const msg = `❌ SKIPPED ${fotogramaId}: Could not determine URL for format ${format}`;
                 console.warn(msg);
                 debugLog.push(msg);
-                debugLog.push(`Available resources: ${packageData.resources.length}`);
-                packageData.resources.forEach((r, idx) => {
-                    debugLog.push(`  [${idx}] ${r.name} (${r.mimetype || r.format})`);
-                });
                 processed++;
                 continue;
             }
 
-            const url = packageData.downloadUrl;
             debugLog.push(`Download URL: ${url}`);
-
             btnDownload.innerHTML = `<span>Descargando ${processed + 1}/${total}...</span>`;
 
             const p = fetch(url)
@@ -867,8 +947,12 @@ class ActiveLayersUI {
                     return resp.blob();
                 })
                 .then(blob => {
-                    // Use original filename from URL or fotogramaId
-                    const filename = url.split('/').pop() || `${fotogramaId.replace(/-/, '_')}.jp2`;
+                    // Determine filename
+                    let ext = format === 'png' ? 'png' : 'jp2';
+                    // Should sanitize ID
+                    const safeId = fotogramaId.replace(/[^a-zA-Z0-9_-]/g, '_');
+                    const filename = `${safeId}.${ext}`;
+                    
                     folder.file(filename, blob);
                     debugLog.push(`✅ Downloaded: ${filename} (${blob.size} bytes)`);
                 })
